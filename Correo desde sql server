@@ -1,0 +1,77 @@
+Declare 
+@FECHA VARCHAR(20);
+SET @FECHA= ( SELECT MAX(convert(datetime,getdate(),105)) AS CONEXION);
+   Declare 
+@FECHAtxt VARCHAR(1000);
+
+
+DECLARE
+             @BodyTop varchar(max),
+			 @Body varchar(max), 	
+			 @BodyHead varchar(max),
+             @TableTail varchar(8) = '</table>',
+             @BodyTail varchar(15) = '</body></html>',
+             @MailBody varchar(max)
+                           
+Set NoCount On;
+
+
+Set @BodyHead =   
+                 '<html><head>' + '  <img  width="569" height="96" src="PEV_FRA.png"  
+				 align="center" style="border-style:dotted;border-width:2px;">' +  
+                  '<style>' +
+                'td { padding: 8px;     background: #e8edff;     border-bottom: 1px solid #fff;
+    color: #669;    border-top: 1px solid transparent;} ' +
+                    '</style> '+ 
+                '<HR><BR><td>Estimados buenos dias. <BR> <br>'+
+                'Se envía  resumen flujo_5.<br> ' 
+
+
+
+Set @BodyTop =  '<body>' +
+        '<P> <u> <strong>  Actualizado </strong> </u> <br> <br> Hasta el :  </P>'  
+		          + @FECHA + '<br>'+ '<br>'+  
+
+		
+        '<table   font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+    font-size: 12px;    margin: 45px;     width: 480px; text-align: left;    border-collapse: collapse; bgcolor=blue' +
+        '<tr bgcolor=#acbccc>' +
+                           '<td align=center><font size=2><b>OPTIMOS</b></font></td>' +
+                           '<td align=center><font size=2><b>NUEVOS</b></font></td>' +
+                '<td align=center><font size=2><b>RENEGOCIADOS</b></font></td>' +
+                       '<td align=center><font size=2><b>total</b></font></td>'
+
+Select @Body = (SELECT OPTIMOS as TD,NUEVOS AS TD,RENEGOCIADOS AS TD, TOTAL AS TD
+FROM(SELECT 
+count(case when [TIPO_CLIENTE] ='OPTIMOS' THEN 1 END) OPTIMOS,
+count(case when [TIPO_CLIENTE] ='NUEVOS' THEN 1 END) NUEVOS,
+count(case when [TIPO_CLIENTE] ='RENEGOCIADOS' THEN 1 END) RENEGOCIADOS,
+COUNT(*)TOTAL
+  FROM [Sistema_Cobranza].[dbo].[FPM1_FLUJO_5])B
+For XML raw('tr'), Elements);
+
+
+Set @Body = Replace(@Body, '_x0020_', space(1))
+Set @Body = Replace(@Body, '_x003D_', '=')
+Set @Body = Replace(@Body, '<tr><TRRow>1</TRRow>', '<tr bgcolor=#f1f1f1>')
+Set @Body = Replace(@Body, '<TRRow>0</TRRow>', '')
+
+
+
+
+
+Set @Body =  @BodyHead + @BodyTop + @Body + @TableTail 
+Set @MailBody = @Body + @BodyTail 
+
+  set @FECHAtxt='Resumen fpm1 flujo_5'+' - '+ CONVERT (VARCHAR(10),GETDATE(),103)
+
+EXEC msdb.dbo.sp_send_dbmail 
+@profile_name='Sistema_Cobranza',
+
+
+@recipients='correo.cl',
+@copy_recipients = 'correo.cl',
+@subject =@FECHAtxt,
+@body = @MailBody,
+@body_format = 'HTML'
+@file_attachments = 'G:\firma.png' 
