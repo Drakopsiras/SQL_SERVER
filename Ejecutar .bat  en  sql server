@@ -1,0 +1,26 @@
+USE [Sistema_Cobranza_fsp]
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[SP_CARGA_BASE]
+AS
+BEGIN
+
+	
+DECLARE   @Table TABLE(line nvarchar(255))
+ 
+INSERT INTO @Table(line)
+
+EXEC master ..xp_cmdshell 'C:\RUTA_ARCHIVO\XXXXX.bat'
+
+select * from @Table 
+
+END
+
+
+
+
